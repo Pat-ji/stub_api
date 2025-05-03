@@ -1,10 +1,10 @@
 [package]
-name = "api_stub"
+name = "osbot_api"
 version = "229.5.0"
 edition = "2021"
 
 [lib]
-name = "api_stub"
+name = "osbot_api"
 
 [dependencies]
 process-memory = "0.5.0"
