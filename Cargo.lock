@@ -188,32 +188,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "api_stub"
-version = "229.5.0"
-dependencies = [
- "chrono",
- "eframe",
- "egui_extras",
- "flate2",
- "log",
- "noise",
- "process-memory",
- "rand 0.9.0",
- "rand_distr",
- "regex",
- "reqwest",
- "rusqlite",
- "rustc-hash 2.1.1",
- "scraper",
- "script_macro",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "windows 0.61.1",
-]
-
-[[package]]
 name = "arboard"
 version = "3.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2783,6 +2757,32 @@ checksum = "9aa2b01e1d916879f73a53d01d1d6cee68adbb31d6d9177a8cfce093cced1d50"
 dependencies = [
  "futures-core",
  "pin-project-lite",
+]
+
+[[package]]
+name = "osbot_api"
+version = "229.5.0"
+dependencies = [
+ "chrono",
+ "eframe",
+ "egui_extras",
+ "flate2",
+ "log",
+ "noise",
+ "process-memory",
+ "rand 0.9.0",
+ "rand_distr",
+ "regex",
+ "reqwest",
+ "rusqlite",
+ "rustc-hash 2.1.1",
+ "scraper",
+ "script_macro",
+ "serde",
+ "serde_json",
+ "strum",
+ "strum_macros",
+ "windows 0.61.1",
 ]
 
 [[package]]
