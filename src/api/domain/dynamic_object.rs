@@ -1,0 +1,1 @@
+static EMPTY_VEC_I8 : Vec < i8 > = vec ! [] ; static EMPTY_VEC_I32 : Vec < i32 > = vec ! [] ; use crate :: c_address :: CAddress ; use crate :: offsets ; # [derive (PartialEq)] pub struct RSDynamicObject { address : CAddress } impl RSDynamicObject { pub (crate) fn new (address : CAddress) -> Self { unimplemented ! () } pub fn get_height (& self) -> i32 { unimplemented ! () } }

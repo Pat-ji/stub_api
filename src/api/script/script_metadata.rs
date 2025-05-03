@@ -1,0 +1,1 @@
+static EMPTY_VEC_I8 : Vec < i8 > = vec ! [] ; static EMPTY_VEC_I32 : Vec < i32 > = vec ! [] ; # [repr (C)] # [derive (Debug , Clone)] pub struct ScriptMetadata { pub name : String , pub author : String , pub version : f32 , pub info : String , pub logo : String , }

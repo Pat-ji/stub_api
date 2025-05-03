@@ -1,0 +1,1 @@
+static EMPTY_VEC_I8 : Vec < i8 > = vec ! [] ; static EMPTY_VEC_I32 : Vec < i32 > = vec ! [] ; use crate :: api :: client :: _client_get_varps ; use crate :: c_address :: CAddress ; pub fn varps_get_value (varp_id : i32) -> i32 { unimplemented ! () } pub fn varps_get_varps () -> Vec < i32 > { Vec :: new () }

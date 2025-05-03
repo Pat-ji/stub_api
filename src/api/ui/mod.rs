@@ -1,0 +1,12 @@
+pub mod menu;
+pub mod widgets;
+pub mod chatbox;
+pub mod bank;
+pub mod dialogue;
+pub mod deposit_box;
+pub mod tab;
+pub mod trade;
+pub mod minimap;
+pub mod grand_exchange;
+pub mod store;
+pub mod indexed_object_set;

@@ -1,0 +1,33 @@
+[package]
+name = "api_stub"
+version = "229.5.0"
+edition = "2021"
+
+[lib]
+name = "api_stub"
+
+[dependencies]
+process-memory = "0.5.0"
+rand = "0.9.0-beta.1"
+rand_distr = "0.5.0-beta.2"
+regex = "1.11.1"
+strum = "0.27.1"
+strum_macros = "0.27.1"
+reqwest = { version = "0.12.12", features = ["blocking"] }
+scraper = "0.22.0"
+windows = { version = "0.61.1", features = ["Win32_UI_Input", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse"] }
+eframe = "0.29.0"
+egui_extras = { version = "0.29.0", features = ["default", "all_loaders"] }
+log = "0.4.25"
+chrono = "0.4"
+rusqlite = { version = "0.33.0", features = ["bundled"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+flate2 = "1.1.0"
+rustc-hash = "2.1.1"
+noise = "0.9.0"
+
+script_macro = { path = "script_macro", optional = true }
+
+[features]
+script = ["script_macro"]
