@@ -66,7 +66,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[no_mangle]
         pub extern "C" fn _script_on_start(params: *const c_char) {
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
+                if let Some(script) = SCRIPT.as_mut() {
                     let params = if !params.is_null() {
                         Some(CStr::from_ptr(params).to_string_lossy().into_owned())
                     } else {
@@ -82,7 +82,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[no_mangle]
         pub extern "C" fn _script_on_loop() -> i32 {
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
+                if let Some(script) = SCRIPT.as_mut() {
                     return script.on_loop();
                 }
             }
@@ -127,7 +127,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[no_mangle]
         pub extern "C" fn _script_on_stop() {
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
+                if let Some(script) = SCRIPT.as_mut() {
                     script.on_stop();
                 }
             }
@@ -137,7 +137,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[no_mangle]
         pub extern "C" fn _script_on_pause() {
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
+                if let Some(script) = SCRIPT.as_mut() {
                     script.on_pause();
                 }
             }
@@ -147,7 +147,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[no_mangle]
         pub extern "C" fn _script_on_resume() {
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
+                if let Some(script) = SCRIPT.as_mut() {
                     script.on_resume();
                 }
             }
@@ -207,7 +207,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 return;
             }
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
+                if let Some(script) = SCRIPT.as_mut() {
                     let chat_message = &mut *(chat_message_ptr as *mut RSChatMessage);
                     script.on_chat_message(chat_message_type, &chat_message);
                 }
