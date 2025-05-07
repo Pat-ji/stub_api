@@ -27,3 +27,4 @@ pub mod model;
 pub mod world_view;
 pub mod region;
 pub mod world_entity;
+pub mod menu_item;
