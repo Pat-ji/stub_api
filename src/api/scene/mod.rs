@@ -14,3 +14,4 @@ pub mod graphics_objects;
 pub mod webwalker;
 pub mod instance_template;
 pub mod world_entities;
+pub mod interactable;
