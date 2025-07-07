@@ -7,3 +7,4 @@ pub mod performance;
 pub mod cache;
 pub mod uuid_decoder;
 pub mod price_lookup;
+pub mod bot;
