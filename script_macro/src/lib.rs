@@ -16,15 +16,36 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
             fn assert_script<S: Script>(_: &S) {}
         }
 
-        static mut SCRIPT: Option<#name> = None;
-        static mut STOPPED: bool = false;
-        static mut COMPLETED: bool = false;
-
         use std::ffi::{c_void, c_char, CStr};
         use osbot_api::eframe::egui;
         use osbot_api::c_vec::CVec;
         use osbot_api::api::ui::chatbox::ChatMessageType;
         use osbot_api::api::domain::chat_message::RSChatMessage;
+        use osbot_api::log;
+        use osbot_api::log::{Log, Level, Record, Metadata};
+
+        static mut SCRIPT: Option<#name> = None;
+        static mut STOPPED: bool = false;
+        static mut COMPLETED: bool = false;
+
+        static mut LOG_FN: Option<unsafe extern "C" fn(*const Record)> = None;
+
+        struct Logger { }
+        impl Log for Logger {
+            fn enabled(&self, metadata: &Metadata) -> bool {
+                true
+            }
+
+            fn log(&self, record: &Record) {
+                unsafe {
+                    if let Some(log_fn) = LOG_FN {
+                        log_fn(record as *const Record);
+                    }
+                }
+            }
+
+            fn flush(&self) { }
+        }
 
         #[no_mangle]
         pub extern "C" fn script_stop() {
@@ -38,13 +59,19 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[doc(hidden)]
         #[no_mangle]
-        pub extern "C" fn _script_initialize() -> bool {
+        pub extern "C" fn _script_initialize(log_fn: *mut c_void) -> bool {
             unsafe {
                 if SCRIPT.is_some() {
                     return false;
                 }
 
                 SCRIPT = Some(<#name as Script>::new());
+
+                LOG_FN = Some(std::mem::transmute(log_fn));
+
+                log::set_boxed_logger(Box::new(Logger {})).unwrap();
+                log::set_max_level(log::LevelFilter::Info);
+
                 true
             }
         }
@@ -160,7 +187,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 return;
             }
             unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
+                if let Some(script) = SCRIPT.as_ref() {
                     let ui = &mut *(ui_ptr as *mut egui::Ui);
                     script.on_render(ui);
                 }
@@ -174,7 +201,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 return;
             }
             unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
+                if let Some(script) = SCRIPT.as_ref() {
                     let ui = &mut *(ui_ptr as *mut egui::Ui);
                     script.on_debug_render(ui);
                 }
