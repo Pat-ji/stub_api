@@ -28,3 +28,4 @@ pub mod world_view;
 pub mod region;
 pub mod world_entity;
 pub mod menu_item;
+pub mod convex_hull;
