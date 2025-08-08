@@ -19,6 +19,8 @@ pub use serde;
 pub use serde_json;
 pub use strum;
 pub use strum_macros;
+pub use windows;
+pub use noise;
 
 pub mod api;
 
