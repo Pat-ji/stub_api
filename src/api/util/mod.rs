@@ -9,3 +9,4 @@ pub mod uuid_decoder;
 pub mod price_lookup;
 pub mod bot;
 pub mod screen_capture;
+pub mod lru_cache;
