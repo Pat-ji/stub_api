@@ -10,6 +10,7 @@ pub use chrono;
 pub use eframe;
 pub use egui_extras;
 pub use log;
+pub use noise;
 pub use rand;
 pub use rand_distr;
 pub use regex;
@@ -19,7 +20,6 @@ pub use serde;
 pub use serde_json;
 pub use strum;
 pub use strum_macros;
-pub use noise;
 
 pub mod api;
 
