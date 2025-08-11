@@ -8,8 +8,8 @@ name = "osbot_api"
 
 [dependencies]
 process-memory = "0.5.0"
-eframe = "0.32.0"
-egui_extras = { version = "0.32.0", features = ["default", "all_loaders"] }
+eframe = "0.31.1"
+egui_extras = { version = "0.31.1", features = ["default", "all_loaders"] }
 rand = "0.9.2"
 rand_distr = "0.5.1"
 regex = "1.11.1"
