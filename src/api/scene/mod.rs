@@ -15,3 +15,5 @@ pub mod webwalker;
 pub mod instance_template;
 pub mod world_entities;
 pub mod interactable;
+pub mod collision_map;
+pub mod convex_hull;
