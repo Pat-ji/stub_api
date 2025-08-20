@@ -19,7 +19,7 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         use std::ffi::{c_void, c_char, CStr};
         use osbot_api::eframe::egui;
         use osbot_api::c_vec::CVec;
-        use osbot_api::api::ui::chatbox::ChatMessageType;
+        use osbot_api::api::ui::chatbox::{ChatMessageType, ChatMessageListener};
         use osbot_api::api::domain::chat_message::RSChatMessage;
         use osbot_api::log;
         use osbot_api::log::{Log, Level, Record, Metadata};
@@ -27,6 +27,8 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         static mut SCRIPT: Option<#name> = None;
         static mut STOPPED: bool = false;
         static mut COMPLETED: bool = false;
+
+        static mut CHAT_MESSAGE_LISTENERS: Vec<Box<dyn ChatMessageListener + 'static>> = Vec::new();
 
         static mut LOG_FN: Option<unsafe extern "C" fn(*const Record)> = None;
 
@@ -47,13 +49,20 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
             fn flush(&self) { }
         }
 
-        #[no_mangle]
-        pub extern "C" fn script_stop() {
+        pub fn script_add_chat_message_listener<F>(listener: F)
+        where
+            F: ChatMessageListener + 'static
+        {
+            unsafe {
+                CHAT_MESSAGE_LISTENERS.push(Box::new(listener));
+            }
+        }
+
+        pub fn script_stop() {
             unsafe { STOPPED = true; }
         }
 
-        #[no_mangle]
-        pub extern "C" fn script_complete() {
+        pub fn script_complete() {
             unsafe { COMPLETED = true; }
         }
 
@@ -237,6 +246,10 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 if let Some(script) = SCRIPT.as_mut() {
                     let chat_message = &mut *(chat_message_ptr as *mut RSChatMessage);
                     script.on_chat_message(chat_message_type, &chat_message);
+
+                    for listener in &mut CHAT_MESSAGE_LISTENERS {
+                        listener.on_chat_message(chat_message_type, &chat_message);
+                    }
                 }
             }
         }
