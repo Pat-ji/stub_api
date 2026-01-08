@@ -2746,7 +2746,7 @@ dependencies = [
 
 [[package]]
 name = "osbot_api"
-version = "231.1.0"
+version = "233.5.0"
 dependencies = [
  "chrono",
  "eframe",
