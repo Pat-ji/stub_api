@@ -20,12 +20,12 @@ pub use serde;
 pub use serde_json;
 pub use strum;
 pub use strum_macros;
+pub(crate) use internal::offsets;
 
 pub mod api;
 
 pub mod c_vec;
 pub(crate) mod c_address;
-pub(crate) mod offsets;
 pub const API_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(feature = "script")]
