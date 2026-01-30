@@ -2003,6 +2003,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "internal"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2746,14 +2753,16 @@ dependencies = [
 
 [[package]]
 name = "osbot_api"
-version = "233.5.0"
+version = "235.6.0"
 dependencies = [
  "chrono",
  "eframe",
  "egui_extras",
  "flate2",
+ "internal",
  "log",
  "noise",
+ "once_cell",
  "process-memory",
  "rand 0.9.2",
  "rand_distr",
