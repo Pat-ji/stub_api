@@ -10,3 +10,4 @@ pub mod diaries;
 pub mod settings;
 pub mod logout;
 pub mod world_switcher;
+pub mod emotes;

@@ -17,3 +17,4 @@ pub mod world_entities;
 pub mod interactable;
 pub mod collision_map;
 pub mod convex_hull;
+pub mod player_owned_house;
