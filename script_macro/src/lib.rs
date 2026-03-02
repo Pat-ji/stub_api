@@ -16,11 +16,13 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
             fn assert_script<S: Script>(_: &S) {}
         }
 
-        use std::ffi::{c_void, c_char, CStr};
+        use std::ffi::{c_void, c_char, CStr, CString};
         use osbot_api::eframe::egui;
+        use osbot_api::eframe::egui::Memory;
         use osbot_api::c_vec::CVec;
         use osbot_api::api::ui::chatbox::{ChatMessageType, ChatMessageListener};
         use osbot_api::api::domain::chat_message::RSChatMessage;
+        use osbot_api::api::script::script_metadata::ScriptMetadataFFI;
         use osbot_api::log;
         use osbot_api::log::{Log, Level, Record, Metadata};
 
@@ -31,6 +33,9 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         static mut CHAT_MESSAGE_LISTENERS: Vec<Box<dyn ChatMessageListener + 'static>> = Vec::new();
 
         static mut LOG_FN: Option<unsafe extern "C" fn(*const Record)> = None;
+
+        static mut UI_MEMORY: Option<Memory> = None;
+        static mut UI_DEBUG_MEMORY: Option<Memory> = None;
 
         struct Logger { }
         impl Log for Logger {
@@ -68,6 +73,38 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[doc(hidden)]
         #[no_mangle]
+        pub extern "C" fn _script_metadata() -> ScriptMetadataFFI {
+            use osbot_api::api::script::script_metadata::ScriptMetadata;
+            let metadata: ScriptMetadata = metadata();
+
+            let name: CString = CString::new(metadata.name).unwrap();
+            let author: CString = CString::new(metadata.author).unwrap();
+            let info: CString = CString::new(metadata.info).unwrap();
+            let logo: CString = CString::new(metadata.logo).unwrap();
+
+            ScriptMetadataFFI {
+                name: name.into_raw(),
+                author: author.into_raw(),
+                version: metadata.version,
+                info: info.into_raw(),
+                logo: logo.into_raw(),
+                category: metadata.category,
+            }
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn _script_metadata_free(meta: ScriptMetadataFFI) {
+            unsafe {
+                if !meta.name.is_null() { let _ = CString::from_raw(meta.name as *mut c_char); }
+                if !meta.author.is_null() { let _ = CString::from_raw(meta.author as *mut c_char); }
+                if !meta.info.is_null() { let _ = CString::from_raw(meta.info as *mut c_char); }
+                if !meta.logo.is_null() { let _ = CString::from_raw(meta.logo as *mut c_char); }
+            }
+        }
+
+        #[doc(hidden)]
+        #[no_mangle]
         pub extern "C" fn _script_initialize(log_fn: *mut c_void) -> bool {
             unsafe {
                 if SCRIPT.is_some() {
@@ -93,23 +130,55 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     return false;
                 }
 
-                SCRIPT.take();
+                let _ = SCRIPT.take();
+
+                CHAT_MESSAGE_LISTENERS.clear();
+                CHAT_MESSAGE_LISTENERS.shrink_to_fit();
+                LOG_FN = None;
+                UI_MEMORY = None;
+                UI_DEBUG_MEMORY = None;
+
                 true
+            }
+        }
+
+        fn _script_report_error(name: &str, error: Box<dyn std::any::Any + core::marker::Send>) {
+            use osbot_api::log::error;
+
+            match error.downcast::<String>() {
+                Ok(s) => {
+                    error!("Panic in script.{}: {}", name, s);
+                }
+                Err(error) => match error.downcast::<&'static str>() {
+                    Ok(s) => {
+                        error!("Panic in script.{}: {}", name, s);
+                    }
+                    Err(_) => {
+                        error!("Panic in script.{}: <unknown panic payload>", name);
+                    }
+                },
             }
         }
 
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_on_start(params: *const c_char) {
-            unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
-                    let params = if !params.is_null() {
-                        Some(CStr::from_ptr(params).to_string_lossy().into_owned())
-                    } else {
-                        None
-                    };
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_mut() {
+                        let params = if !params.is_null() {
+                            Some(CStr::from_ptr(params).to_string_lossy().into_owned())
+                        } else {
+                            None
+                        };
 
-                    script.on_start(params);
+                        script.on_start(params);
+                    }
+                }
+            })) {
+                Ok(_) => {},
+                Err(err) => {
+                    _script_report_error("on_start", err);
                 }
             }
         }
@@ -117,34 +186,81 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_on_loop() -> i32 {
-            unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
-                    return script.on_loop();
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_mut() {
+                        return script.on_loop();
+                    }
+                }
+
+                0
+            })) {
+                Ok(value) => value,
+                Err(err) => {
+                    _script_report_error("on_loop", err);
+                    1000
                 }
             }
-            0
         }
 
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_can_start() -> bool {
-            unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
-                    return script.can_start();
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_ref() {
+                        return script.can_start();
+                    }
+                }
+
+                true
+            })) {
+                Ok(value) => value,
+                Err(err) => {
+                    _script_report_error("can_start", err);
+                    false
                 }
             }
-            true
         }
 
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_can_break() -> bool {
-            unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
-                    return script.can_break();
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_ref() {
+                        return script.can_break();
+                    }
+                }
+
+                true
+            })) {
+                Ok(value) => value,
+                Err(err) => {
+                    _script_report_error("can_break", err);
+                    false
                 }
             }
-            true
+        }
+
+         #[doc(hidden)]
+        #[no_mangle]
+        pub extern "C" fn _script_can_login() -> bool {
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_ref() {
+                        return script.can_login();
+                    }
+                }
+
+                true
+            })) {
+                Ok(value) => value,
+                Err(err) => {
+                    _script_report_error("can_login", err);
+                    false
+                }
+            }
         }
 
         #[doc(hidden)]
@@ -162,9 +278,16 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_on_stop() {
-            unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
-                    script.on_stop();
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_mut() {
+                        script.on_stop();
+                    }
+                }
+            })) {
+                Ok(_) => {},
+                Err(err) => {
+                    _script_report_error("on_stop", err);
                 }
             }
         }
@@ -172,9 +295,16 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_on_pause() {
-            unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
-                    script.on_pause();
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_mut() {
+                        script.on_pause();
+                    }
+                }
+            })) {
+                Ok(_) => {},
+                Err(err) => {
+                    _script_report_error("on_pause", err);
                 }
             }
         }
@@ -182,9 +312,16 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
         #[doc(hidden)]
         #[no_mangle]
         pub extern "C" fn _script_on_resume() {
-            unsafe {
-                if let Some(script) = SCRIPT.as_mut() {
-                    script.on_resume();
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                unsafe {
+                    if let Some(script) = SCRIPT.as_mut() {
+                        script.on_resume();
+                    }
+                }
+            })) {
+                Ok(_) => {},
+                Err(err) => {
+                    _script_report_error("on_resume", err);
                 }
             }
         }
@@ -195,11 +332,34 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
             if ui_ptr.is_null() {
                 return;
             }
+
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
-                    let ui = &mut *(ui_ptr as *mut egui::Ui);
-                    script.on_render(ui);
+                let ui = &mut *(ui_ptr as *mut egui::Ui);
+
+                use crate::egui::util::IdTypeMap;
+                ui.ctx().memory_mut(|m| {
+                    let plugin_data = UI_MEMORY.get_or_insert_with(Memory::default);
+                    std::mem::swap(&mut m.data, &mut plugin_data.data);
+                });
+
+                match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    unsafe {
+                        if let Some(script) = SCRIPT.as_ref() {
+                            let ui = &mut *(ui_ptr as *mut egui::Ui);
+
+                            script.on_render(ui);
+                        }
+                    }
+                })) {
+                    Ok(_) => {},
+                    Err(err) => {
+                        _script_report_error("on_render", err);
+                    }
                 }
+
+                ui.ctx().memory_mut(|m| {
+                    std::mem::swap(&mut m.data, &mut UI_MEMORY.as_mut().unwrap().data);
+                });
             }
         }
 
@@ -209,11 +369,34 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
             if ui_ptr.is_null() {
                 return;
             }
+
             unsafe {
-                if let Some(script) = SCRIPT.as_ref() {
-                    let ui = &mut *(ui_ptr as *mut egui::Ui);
-                    script.on_debug_render(ui);
+                let ui = &mut *(ui_ptr as *mut egui::Ui);
+
+                use crate::egui::util::IdTypeMap;
+                ui.ctx().memory_mut(|m| {
+                    let plugin_data = UI_DEBUG_MEMORY.get_or_insert_with(Memory::default);
+                    std::mem::swap(&mut m.data, &mut plugin_data.data);
+                });
+
+                match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    unsafe {
+                        if let Some(script) = SCRIPT.as_ref() {
+                            let ui = &mut *(ui_ptr as *mut egui::Ui);
+
+                            script.on_debug_render(ui);
+                        }
+                    }
+                })) {
+                    Ok(_) => {},
+                    Err(err) => {
+                        _script_report_error("on_debug_render", err);
+                    }
                 }
+
+                ui.ctx().memory_mut(|m| {
+                    std::mem::swap(&mut m.data, &mut UI_DEBUG_MEMORY.as_mut().unwrap().data);
+                });
             }
         }
 
