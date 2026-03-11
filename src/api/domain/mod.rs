@@ -29,3 +29,4 @@ pub mod region;
 pub mod world_entity;
 pub mod menu_item;
 pub mod hint_arrow;
+pub mod pending_spawn;
