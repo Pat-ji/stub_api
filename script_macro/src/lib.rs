@@ -402,6 +402,25 @@ pub fn script_exports(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[doc(hidden)]
         #[no_mangle]
+        pub extern "C" fn _script_get_disabled_random_events() -> CVec {
+            unsafe {
+                if let Some(script) = SCRIPT.as_ref() {
+                    let mut events = script.get_disabled_random_events();
+
+                    let len = events.len();
+                    let capacity = events.capacity();
+                    let ptr = events.as_mut_ptr() as *mut c_void;
+
+                    std::mem::forget(events);
+                    return CVec::new(ptr, len, capacity);
+                }
+            }
+
+            CVec::new(std::ptr::null_mut(), 0, 0)
+        }
+        
+        #[doc(hidden)]
+        #[no_mangle]
         pub extern "C" fn _script_get_chat_message_types() -> CVec {
             unsafe {
                 if let Some(script) = SCRIPT.as_ref() {
