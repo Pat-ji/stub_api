@@ -32,7 +32,7 @@ internal = { path = "internal" }
 script_macro = { path = "script_macro" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.62.2", features = ["Win32_UI_Input", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_Graphics", "Win32_Graphics_Gdi"] }
+windows = { version = "0.62.2", features = ["Win32_UI_Input", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_Graphics", "Win32_Graphics_Gdi", "Win32_UI_HiDpi"] }
 
 
 [features]
