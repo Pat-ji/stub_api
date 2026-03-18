@@ -1,0 +1,1 @@
+static EMPTY_VEC_I8 : Vec < i8 > = vec ! [] ; static EMPTY_VEC_I32 : Vec < i32 > = vec ! [] ; use strum_macros :: EnumIter ; # [repr (C)] # [derive (EnumIter , PartialEq , Clone , Copy , Debug)] pub enum RandomEventType { AutoLogin = 0 , BankPin = 1 , BreakHandler = 2 , DeathsDomain = 3 , Behavior = 4 , }
