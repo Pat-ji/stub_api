@@ -9,6 +9,7 @@
 pub use chrono;
 pub use eframe;
 pub use egui_extras;
+pub use flate2;
 pub use log;
 pub use noise;
 pub use rand;
