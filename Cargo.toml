@@ -1,6 +1,6 @@
 [package]
 name = "osbot_api"
-version = "236.4.0"
+version = "237.2.0"
 edition = "2021"
 
 
