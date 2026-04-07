@@ -14,3 +14,4 @@ pub mod user_override;
 pub mod randoms;
 pub mod mind;
 pub mod database;
+pub mod math;
